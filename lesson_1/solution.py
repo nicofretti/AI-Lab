@@ -10,60 +10,57 @@ import gym, envs
 def BFS_TreeSearch(problem):
     """
     Tree Search BFS
-    
-    Args:
-        problem: OpenAI Gym environment
-        
-    Returns:
-        (path, time_cost, space_cost): solution as a path and stats.
+    Args->problem: OpenAI Gym environment
+    Returns->(path, time_cost, space_cost): solution as a path and stats.
     """
-    
     node = Node(problem.startstate, None)
     time_cost = 0
     space_cost = 1
     frontier = NodeQueue()
     frontier.add(node)
-    found = False # found the solution
-    while not frontier.is_empty() and not found:
+    while not frontier.is_empty():
         current = frontier.remove()
         for move in range(problem.action_space.n):
             time_cost += 1
-            new_node = Node(problem.sample(current.state,move),current)
-            if(new_node.state == problem.goalstate):
-                node = new_node
-                found = True
-                break
-            else:
-                frontier.add(new_node)
+            leaf = Node(problem.sample(current.state,move),current)
+            if(leaf.state == problem.goalstate):
+                return build_path(leaf), time_cost, space_cost # solution
+            frontier.add(leaf)
         if(len(frontier)>space_cost):
             space_cost = len(frontier)
-    return build_path(node), time_cost, space_cost
+    return None, time_cost, space_cost #failure
 
 def BFS_GraphSearch(problem):
     """
     Graph Search BFS
-    
-    Args:
-        problem: OpenAI Gym environment
-        
-    Returns:
-        (path, time_cost, space_cost): solution as a path and stats.
+    Args->problem: OpenAI Gym environment
+    Returns->(path, time_cost, space_cost): solution as a path and stats.
     """
-    
     node = Node(problem.startstate, None)
     time_cost = 0
     space_cost = 1
-    #
-    # YOUR CODE HERE ...
-    #
-    return build_path(node), time_cost, space_cost  
+    frontier = NodeQueue()
+    explored = []
+    frontier.add(node)
+    while not frontier.is_empty():
+        current = frontier.remove()
+        explored.append(current.state)
+        for move in range(problem.action_space.n):
+            child = Node(problem.sample(current.state,move),current)
+            if (child.state not in explored) and (child.state not in frontier):
+                if problem.goalstate == child.state:
+                    return build_path(child), time_cost, space_cost #solution
+                frontier.add(child)
+            time_cost += 1
+        space_cost = max(space_cost,len(explored)+len(frontier))
+    return None, time_cost, space_cost #failure
 
 if __name__=="__main__":
     envname = "SmallMaze-v0"
     environment = gym.make(envname)
 
     solution_ts, time_ts, memory_ts = BFS_TreeSearch(environment)
-    #solution_gs, time_gs, memory_gs = BFS_GraphSearch(environment)
+    solution_gs, time_gs, memory_gs = BFS_GraphSearch(environment)
 
     print("\n----------------------------------------------------------------")
     print("\tBFS TREE SEARCH PROBLEM: ")
@@ -72,9 +69,9 @@ if __name__=="__main__":
     print("N° of nodes explored: {}".format(time_ts))
     print("Max n° of nodes in memory: {}".format(memory_ts))
 
-    #print("\n----------------------------------------------------------------")
-    #print("\tBFS GRAPH SEARCH PROBLEM: ")
-    #print("----------------------------------------------------------------")
-    #print("Solution: {}".format(solution_2_string(solution_gs, environment)))
-    #print("N° of nodes explored: {}".format(time_gs))
-    #print("Max n° of nodes in memory: {}".format(memory_gs))
+    print("\n----------------------------------------------------------------")
+    print("\tBFS GRAPH SEARCH PROBLEM: ")
+    print("----------------------------------------------------------------")
+    print("Solution: {}".format(solution_2_string(solution_gs, environment)))
+    print("N° of nodes explored: {}".format(time_gs))
+    print("Max n° of nodes in memory: {}".format(memory_gs))
