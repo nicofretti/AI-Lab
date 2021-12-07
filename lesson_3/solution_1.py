@@ -3,26 +3,57 @@ from bucket import Bucket
 
 
 def constraint_partitioning(bucket_elimination, variable_order, soft_constraints, hard_constraints):
+    """
+        Generate the bucket with the corresponding constraints in the correct order (inverse of the given), and add all the buckets to the bucket_elimination object that represent the problem.
+
+        Parameters
+        ----------
+            bucket_elimination : BucketElimination
+                the object of the class BucketElimination that represent the current problem (empty).
+            variable_order : list
+                the variables that appear in the problem in the given order.
+            soft_constraints : list
+                the soft contraints, a list of lists, each list is built with the function name for the first element, followed by the intereseted variables.
+            hard_constraints : list
+                the hard contraints (only inequality constraints), a list of lists, each list represent the variable interested in the inequality contraints.
+
+        Returns:
+        --------
+            bucket_elimination : BucketElimination
+                the object of the class BucketElimination that represents the current problem (with the bucket filled).
+    """
     already_added = []
     for var in reversed(variable_order):
         soft = []
         hard = []
-        for constraint in hard_constraints:
-            if constraint not in already_added and var in constraint:
-                hard.append(constraint)
-        for constraint in soft_constraints:
-            if constraint not in already_added and var in constraint:
-                soft.append(constraint)
+        for const in hard_constraints:
+            if const not in already_added and var in const:
+                hard.append(const)
+                already_added.append(const)
+        for const in soft_constraints:
+            if const not in already_added and var in const:
+                soft.append(const)
+                already_added.append(const)
         bucket = Bucket(var,soft,hard)
         bucket_elimination.add(bucket)
     return bucket_elimination
 
 
 def main_bucket_elimination(problem_name, problem_definition):
+    """
+        Main script of the bucket elimination, given the problem definition compute the global_maximum,
+        the correct assignment and the memory cost of the process.
 
+        Parameters
+        ----------
+            problem_name : str
+                the name of the problem, for visualization purpose.
+            problem_definition : list
+                complete definition of the problem, a list that contain (in order):
+                problem_domains, variable_order, problem_soft_constraints and problem_hard_constraints.
+        """
     # Extract the problem constant from the parameter "problem_definition"
     problem_domains, problem_order, problem_soft_constraints, problem_hard_constraints = problem_definition
-    assignment, global_maximum, max_table_size = None, None, None
     bucket_elimination = constraint_partitioning(BucketElimination(problem_domains),problem_order,problem_soft_constraints,problem_hard_constraints)
 
     bucket_elimination.bucket_processing()
@@ -36,13 +67,13 @@ def main_bucket_elimination(problem_name, problem_definition):
 
     max_table_size = get_max_table_size(bucket_elimination.get_tables())
     # Plot all the computed results
-    #print(f"\nBucket Elimination for the: {problem_name}:")
-    #print(f"\tVariable Assignment: {assignment}")
-    #print(f"\tGlobal Maximum Found: {global_maximum}")
-    #print(f"\tMaximum Table Size (with the order {problem_order}): {max_table_size}")
-    #print("\tGraphical Visualization:")
+    print(f"\nBucket Elimination for the: {problem_name}:")
+    print(f"\tVariable Assignment: {assignment}")
+    print(f"\tGlobal Maximum Found: {global_maximum}")
+    print(f"\tMaximum Table Size (with the order {problem_order}): {max_table_size}")
+    print("\tGraphical Visualization:")
     #print(evaluations)
-    #bucket_elimination.plot_assignment_as_graph(assignment, evaluations)
+    bucket_elimination.plot_assignment_as_graph(assignment, evaluations)
 
 
 def get_max_table_size(final_tables):
@@ -62,14 +93,8 @@ def get_max_table_size(final_tables):
 
     # Variable initialization
     max_table_size = 0
-    current_lenght = 0
     for table in final_tables:
-        current_lenght = 0
-        for row in table:
-            current_lenght += len(row)
-        if(current_lenght>max_table_size):
-            max_table_size = current_lenght
-    print(max_table_size)
+        max_table_size = max(max_table_size,len(table[0])*len(table))
     return max_table_size
 
 
@@ -93,7 +118,8 @@ def evaluate_soft_constraints(assignment, soft_constraints):
     # Variable initialization
     evaluations = []
     for elem in soft_constraints:
-        val = elem[0](assignment[elem[1]],assignment[elem[2]])
+        function = elem[0]
+        val = function(assignment[elem[1]],assignment[elem[2]])
         evaluations.append(val)
     return evaluations
 
@@ -139,4 +165,4 @@ PROBLEM_1 = [
     [[F_1, 'X1', 'X2'], [F_1, 'X1', 'X4'], [F_1, 'X2', 'X4'], [F_1, 'X3', 'X4']],[]]  # PROBLEM SOFT CONSTRAINTS
 
 if __name__=="__main__":
-    main_bucket_elimination("Problem Graph Coloring", PROBLEM_GC)
+    main_bucket_elimination("Partial Test 15/05/2013", PROBLEM_1)
