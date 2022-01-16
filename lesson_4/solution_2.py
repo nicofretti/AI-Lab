@@ -13,46 +13,66 @@ from utils.ai_lab_functions import *
 from timeit import default_timer as timer
 from tqdm import tqdm as tqdm
 
-def policy_evaluation(env, policy, utility, discount=0.9, maxiters=300):
+def policy_evaluation(env, policy, U, discount=0.9, maxiters=300):
     """
     Update the current policy with che current value function
     """
     for i in range(maxiters):
-        for state in range(env.observation_space.n):
+        for s in range(env.observation_space.n):
             summ = 0
-            for next_state in range(env.observation_space.n):
-                summ += env.T[state,policy[state],next_state] * utility[next_state]
-            utility[state] = env.RS[state] + summ*discount
-    return utility
+            for s_1 in range(env.observation_space.n):
+                summ += env.T[s, policy[s], s_1] * U[s_1]
+            U[s] = env.RS[s] + discount * summ
+    return U
 
 
-def value_iteration(env, maxiters=300, discount=0.9, max_error=1e-3):
+def policy_iteration(environment, maxiters=150, discount=0.9, maxviter=10):
     """
-    Performs the value iteration algorithm for a specific environment
+    Performs the policy iteration algorithm for a specific environment
 
     Args:
         environment: OpenAI Gym environment
         maxiters: timeout for the iterations
         discount: gamma value, the discount factor for the Bellman equation
-        max_error: the maximum error allowd in the utility of any state
 
     Returns:
         policy: 1-d dimensional array of action identifiers where index `i` corresponds to state id `i`
     """
 
-    U_1 = [0 for _ in range(env.observation_space.n)]  # vector of utilities for states S
-    delta = 0  # maximum change in the utility o any state in an iteration
-    U = U_1.copy()
+    policy = [0 for _ in range(environment.observation_space.n)]  # initial policy
+    U = [0 for _ in range(environment.observation_space.n)]  # utility array
 
+    unchanged = False
+    iters = 0
+    # Step (2) Policy Improvement
+    while not unchanged and iters < maxiters:
+        U = policy_evaluation(env, policy, U, discount, maxiters)
+        unchanged = True
+        for s in range(env.observation_space.n):
+            max_policy = np.inf * -1
+            arg_max_policy = -1
+            for a in range(env.action_space.n):
+                summ = 0
+                for s_1 in range(env.observation_space.n):
+                    summ += env.T[s, a, s_1] * U[s_1]
+                if(summ > max_policy):
+                    max_policy = summ
+                    arg_max_policy = a
 
-    return values_to_policy(np.asarray(U), env)  # automatically convert the value matrix U to a policy
-
+            summaries_utilty = 0
+            for s_1 in range(env.observation_space.n):
+                summaries_utilty += env.T[s, policy[s], s_1] * U[s_1]
+            if (max_policy > summaries_utilty):
+                policy[s] = arg_max_policy
+                unchanged = False
+        iters += 1
+    return np.asarray(policy)
 
 if __name__=="__main__":
-    envname = "LavaFloor-v0"
+    envname = "VeryBadLavaFloor-v0"
 
     print("\n----------------------------------------------------------------")
-    print("\tEnvironment: {} \n\tValue Iteration".format(envname))
+    print("\tEnvironment: {} \n\tPolicy Iteration".format(envname))
     print("----------------------------------------------------------------")
 
     env = gym.make(envname)
@@ -60,9 +80,8 @@ if __name__=="__main__":
     env.render()
 
     t = timer()
-    print(env)
-    #policy = value_iteration(env)
+    policy = policy_iteration(env)
 
     print("\nTIME: \n{}".format(round(timer() - t, 4)))
     print("\nPOLICY:")
-    #print(np.vectorize(env.actions.get)(policy.reshape(env.rows, env.cols)
+    print(np.vectorize(env.actions.get)(policy.reshape(env.rows, env.cols)))
