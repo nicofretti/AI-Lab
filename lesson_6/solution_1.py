@@ -36,7 +36,6 @@ def create_model(input_size, output_size, hidden_layer_size, hidden_layer_number
     model.compile(loss='mean_squared_error', optimizer='adam')
     return model
 
-
 def train_model(model, memory, batch_size, gamma=0.99):
     """
     Performs the value iteration algorithm for a specific environment
@@ -50,9 +49,6 @@ def train_model(model, memory, batch_size, gamma=0.99):
         return model
     # Sample a random batch from the memory
     batch = random.sample(memory, batch_size)
-    print(len(batch))
-    print("Start training")
-    cont = 0
     for (s, a, s_1, r, final_state) in batch:
         s = s.reshape(1, 4)
         target = model.predict(s)[0]
@@ -61,12 +57,7 @@ def train_model(model, memory, batch_size, gamma=0.99):
         else:
             max_q = np.argmax(model.predict(s_1.reshape(1, 4))[0])
             target[a] = r + gamma * max_q
-        #print(s, final_state)
         model.fit(s, np.array([target]), epochs=1, verbose=0)
-        #print(target)
-        cont+=1
-        print(cont)
-    print("Model trained")
     return model
 
 def DQN(env, neural_network, trials, goal_score, batch_size, epsilon_decay=0.9995):
@@ -84,14 +75,13 @@ def DQN(env, neural_network, trials, goal_score, batch_size, epsilon_decay=0.999
     epsilon_min = 0.01
 
     score_queue = [] # coda di score che dice nei vari traial quanto è andata bene
-    experience = deque(maxlen=10000)
-    r = 0
+    experience = deque(maxlen=1000)
     # fit modifica i passi in maniera tale da correggere l'input sull'output desiderato
     for trial in range(trials):
+        print("Trial: ", trial)
         s = env.reset()
         final_state = False
         score = 0
-        print("Trial: ", trial)
         while not final_state:
             # Epsilon greedy exploration
             if random.random() < epsilon:
@@ -103,10 +93,10 @@ def DQN(env, neural_network, trials, goal_score, batch_size, epsilon_decay=0.999
             epsilon = max(epsilon_min, epsilon * epsilon_decay)
             # Step
             s_1, r, final_state, _ = env.step(a)
-            experience.append((np.array(s), a, np.array(s_1), r, final_state))
-            train_model(neural_network, experience, batch_size)
-            s = s_1
             score+= r
+            experience.append((np.array(s), a, np.array(s_1), r, final_state))
+            neural_network = train_model(neural_network, experience, batch_size)
+            s = s_1
         score_queue.append(score)
         print("Episode: {:7.0f}, Score: {:3.0f}, EPS: {:3.2f}".format(trial, score_queue[-1], epsilon))
         if (score > goal_score): break
@@ -114,15 +104,12 @@ def DQN(env, neural_network, trials, goal_score, batch_size, epsilon_decay=0.999
     return neural_network, score_queue
 
 if __name__=="__main__":
-    # replay_buffer = deque(maxlen=100000)
-    # for _ in range(100): replay_buffer.append(random.uniform(0,1))
-    # samples = random.sample(replay_buffer, 3)
     rewser = []
     window = 10
 
     env = gym.make("CartPole-v1")
     neural_network = create_model(4, 2, 32, 2)
-    neural_network, score = DQN(env, neural_network, trials=1000, goal_score=130, batch_size=1)
+    neural_network, score = DQN(env, neural_network, trials=1000, goal_score=130, batch_size=64)
 
     score = rolling(np.array(score), window)
     rewser.append({"x": np.arange(1, len(score) + 1), "y": score, "ls": "-", "label": "DQN"})
