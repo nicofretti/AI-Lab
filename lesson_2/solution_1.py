@@ -46,9 +46,6 @@ def greedy_tree_search(environment, timeout=10000):
     queue.add(Node(environment.startstate))
     time_cost = 0
     space_cost = 1
-    #
-    # YOUR CODE HERE ...
-    #
     while True:
         if time_cost >= timeout: return ("time-out", time_cost, space_cost)  # timeout check
         if(queue.is_empty()):
@@ -95,29 +92,18 @@ def greedy(environment, search_type):
     return path, time_cost, space_cost
 
 if __name__=="__main__":
-    # Create and render the environment
-    env = gym.make("SmallMaze-v0")
-    env.render()
-    #solution, time, memory = ucs(env)
-
-    #print("\n----------------------------------------------------------------")
-    #print("\nUNIFORM GRAPH SEARCH PROBLEM: ")
-    #print("----------------------------------------------------------------")
-    #print("Solution: {}".format(solution_2_string(solution, env)))
-    #print("N° of nodes explored: {}".format(time))
-    #print("Max n° of nodes in memory: {}".format(memory))
     envname = "SmallMaze-v0"
     environment = gym.make(envname)
 
-    #solution_ts, time_ts, memory_ts = greedy(environment, greedy_tree_search)
+    solution_ts, time_ts, memory_ts = greedy(environment, greedy_tree_search)
     solution_gs, time_gs, memory_gs = greedy(environment, greedy_graph_search)
 
-    #print("\n----------------------------------------------------------------")
-    #print("\tGREEDY BEST FIRST TREE SEARCH PROBLEM: ")
-    #print("----------------------------------------------------------------")
-    #print("Solution: {}".format(solution_2_string(solution_ts, environment)))
-    #print("N° of nodes explored: {}".format(time_ts))
-    #print("Max n° of nodes in memory: {}".format(memory_ts))
+    print("\n----------------------------------------------------------------")
+    print("\tGREEDY BEST FIRST TREE SEARCH PROBLEM: ")
+    print("----------------------------------------------------------------")
+    print("Solution: {}".format(solution_2_string(solution_ts, environment)))
+    print("N° of nodes explored: {}".format(time_ts))
+    print("Max n° of nodes in memory: {}".format(memory_ts))
 
     print("\n----------------------------------------------------------------")
     print("\tGREEDY BEST FIRST GRAPH SEARCH PROBLEM: ")
