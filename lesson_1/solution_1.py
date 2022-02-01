@@ -16,18 +16,24 @@ def BFS_TreeSearch(problem):
     node = Node(problem.startstate, None)
     time_cost = 0
     space_cost = 1
+
+    if node.state == problem.goalstate:
+        return build_path(node), time_cost, space_cost
+
     frontier = NodeQueue()
     frontier.add(node)
+
     while not frontier.is_empty():
         current = frontier.remove()
-        for move in range(problem.action_space.n):
+
+        for action in range(problem.action_space.n):
             time_cost += 1
-            leaf = Node(problem.sample(current.state,move),current)
-            if(leaf.state == problem.goalstate):
-                return build_path(leaf), time_cost, space_cost # solution
-            frontier.add(leaf)
-        if(len(frontier)>space_cost):
-            space_cost = len(frontier)
+            child = Node(problem.sample(current.state, action), current)
+            if(child.state == problem.goalstate):
+                return build_path(child), time_cost, space_cost # solution
+            frontier.add(child)
+
+        space_cost = max(space_cost,len(frontier))
     return None, time_cost, space_cost #failure
 
 def BFS_GraphSearch(problem):
@@ -39,20 +45,25 @@ def BFS_GraphSearch(problem):
     node = Node(problem.startstate, None)
     time_cost = 0
     space_cost = 1
+
+    if node.state == problem.goalstate:
+        return build_path(node), time_cost, space_cost
+
     frontier = NodeQueue()
     explored = []
     frontier.add(node)
+
     while not frontier.is_empty():
         current = frontier.remove()
         explored.append(current.state)
-        for move in range(problem.action_space.n):
-            child = Node(problem.sample(current.state,move),current)
+        for action in range(problem.action_space.n):
+            child = Node(problem.sample(current.state, action), current)
             if (child.state not in explored) and (child.state not in frontier):
                 if problem.goalstate == child.state:
                     return build_path(child), time_cost, space_cost #solution
                 frontier.add(child)
             time_cost += 1
-        space_cost = max(space_cost,len(explored)+len(frontier))
+        space_cost = max(space_cost, len(explored)+len(frontier))
     return None, time_cost, space_cost #failure
 
 if __name__=="__main__":
