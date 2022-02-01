@@ -45,8 +45,7 @@ def train_model(model, memory, batch_size, gamma=0.99):
         batch_size: the size of the batch sampled from the memory
         gamma: gamma value, the discount factor for the Bellman equation
     """
-    if len(memory)< batch_size:
-        return model
+    batch_size = min(len(memory),batch_size)
     # Sample a random batch from the memory
     batch = random.sample(memory, batch_size)
     for (s, a, s_1, r, final_state) in batch:
@@ -55,7 +54,7 @@ def train_model(model, memory, batch_size, gamma=0.99):
         if final_state:
             target[a] = r
         else:
-            max_q = np.argmax(model.predict(s_1.reshape(1, 4))[0])
+            max_q = max(model.predict(s_1.reshape(1, 4))[0])
             target[a] = r + gamma * max_q
         model.fit(s, np.array([target]), epochs=1, verbose=0)
     return model
@@ -71,8 +70,7 @@ def DQN(env, neural_network, trials, goal_score, batch_size, epsilon_decay=0.999
         epsilon_decay: the decay value of epsilon for the eps-greedy exploration
     """
 
-    epsilon = 1.0
-    epsilon_min = 0.01
+    epsilon = 1.0; epsilon_min = 0.01
 
     score_queue = [] # coda di score che dice nei vari traial quanto è andata bene
     experience = deque(maxlen=1000)
@@ -80,21 +78,19 @@ def DQN(env, neural_network, trials, goal_score, batch_size, epsilon_decay=0.999
     for trial in range(trials):
         print("Trial: ", trial)
         s = env.reset()
-        final_state = False
-        score = 0
+        final_state = False; score = 0
         while not final_state:
             # Epsilon greedy exploration
             if random.random() < epsilon:
                 a = env.action_space.sample()
             else:
-                s = s.reshape(1, 4)
-                a = np.argmax(neural_network.predict(s))
+                a = np.argmax(neural_network.predict(s.reshape(1, 4)))
 
             epsilon = max(epsilon_min, epsilon * epsilon_decay)
             # Step
             s_1, r, final_state, _ = env.step(a)
             score+= r
-            experience.append((np.array(s), a, np.array(s_1), r, final_state))
+            experience.append([s, a, s_1, r, final_state])
             neural_network = train_model(neural_network, experience, batch_size)
             s = s_1
         score_queue.append(score)
@@ -109,7 +105,7 @@ if __name__=="__main__":
 
     env = gym.make("CartPole-v1")
     neural_network = create_model(4, 2, 32, 2)
-    neural_network, score = DQN(env, neural_network, trials=1000, goal_score=130, batch_size=64)
+    neural_network, score = DQN(env, neural_network, trials=20, goal_score=130, batch_size=64)
 
     score = rolling(np.array(score), window)
     rewser.append({"x": np.arange(1, len(score) + 1), "y": score, "ls": "-", "label": "DQN"})
