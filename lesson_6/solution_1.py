@@ -25,15 +25,12 @@ def create_model(input_size, output_size, hidden_layer_size, hidden_layer_number
         hidden_layer_number: the number of hidden layers
     """
     model = Sequential()
-    # Input layer + first hidden layer
-    model.add(Dense(hidden_layer_size, input_dim=input_size, activation='relu'))
-    # Other hidden layers
+
+    model.add(Dense(hidden_layer_size, input_dim=input_size, activation='relu')) # Input layer + first hidden layer
     for _ in range(hidden_layer_number-1):
-        model.add(Dense(hidden_layer_size, activation='relu'))
-    # Output layer = the input is only repoted
-    model.add(Dense(output_size, activation='linear'))
-    # Creating model and define loss function (= funzione da minimizzare) and optimizer (= algoritmo di ottimizzazione)
-    model.compile(loss='mean_squared_error', optimizer='adam')
+        model.add(Dense(hidden_layer_size, activation='relu')) # Other hidden layers
+    model.add(Dense(output_size, activation='linear')) # Output layer = the input is only repoted
+    model.compile(loss='mean_squared_error', optimizer='adam') # Creating model and define loss function and optimizer
     return model
 
 def train_model(model, memory, batch_size, gamma=0.99):
@@ -81,12 +78,12 @@ def DQN(env, neural_network, trials, goal_score, batch_size, epsilon_decay=0.999
         final_state = False; score = 0
         while not final_state:
             # Epsilon greedy exploration
-            if random.random() < epsilon:
+            if random.uniform(0, 1) < epsilon:
                 a = env.action_space.sample()
             else:
                 a = np.argmax(neural_network.predict(s.reshape(1, 4)))
-
             epsilon = max(epsilon_min, epsilon * epsilon_decay)
+
             # Step
             s_1, r, final_state, _ = env.step(a)
             score+= r

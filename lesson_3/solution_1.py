@@ -23,18 +23,18 @@ def constraint_partitioning(bucket_elimination, variable_order, soft_constraints
                 the object of the class BucketElimination that represents the current problem (with the bucket filled).
     """
     already_added = []
-    for var in reversed(variable_order):
-        soft = []
-        hard = []
-        for const in hard_constraints:
-            if const not in already_added and var in const:
-                hard.append(const)
-                already_added.append(const)
-        for const in soft_constraints:
-            if const not in already_added and var in const:
-                soft.append(const)
-                already_added.append(const)
-        bucket = Bucket(var,soft,hard)
+    for b_var in reversed(variable_order):
+        b_soft = []
+        b_hard = []
+        for h in hard_constraints:
+            if h not in already_added and b_var in h:
+                b_hard.append(h)
+                already_added.append(h)
+        for s in soft_constraints:
+            if s not in already_added and b_var in s:
+                b_soft.append(s)
+                already_added.append(s)
+        bucket = Bucket(b_var,b_soft,b_hard)
         bucket_elimination.add(bucket)
     return bucket_elimination
 

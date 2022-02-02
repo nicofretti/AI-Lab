@@ -31,7 +31,6 @@ def epsilon_greedy(q, state, epsilon):
 def softmax(q, state, temp):
     """
     Softmax action selection function
-
     Args:
     q: q table
     state: agent's current state
@@ -40,14 +39,12 @@ def softmax(q, state, temp):
     Returns:
         action id
     """
-    e = np.exp(q[state] / temp)
+    e = np.exp(q[state] / temp) #q[state] = U R D L
     return np.random.choice(q.shape[1], p=e / e.sum())
-
 
 def sarsa(env, episodes, alpha, gamma, expl_func, expl_param):
     """
     Performs the SARSA algorithm for a specific environment
-
     Args:
         environment: OpenAI gym environment
         episodes: number of episodes for training
@@ -66,17 +63,15 @@ def sarsa(env, episodes, alpha, gamma, expl_func, expl_param):
         s = env.reset()
         a = expl_func(Q, s, expl_param)
         end_state = False
-        r_tot = 0
-        l_tot = 0
         while not end_state:
             s_1, r, end_state, _ = env.step(a)
             a_1 = expl_func(Q, s_1, expl_param)
+
             Q[s, a] += alpha * (r + gamma * Q[s_1, a_1] - Q[s, a])
             s, a = s_1, a_1
-            r_tot += r
-            l_tot += 1
-        rews[i] = r_tot
-        lengths[i] = l_tot
+
+            rews[i] += r
+            lengths[i] += 1
     policy = Q.argmax(axis=1)  # q.argmax(axis=1) automatically extract the policy from the q table
     return policy, rews, lengths
 
@@ -93,16 +88,53 @@ if __name__=="__main__":
     print()
 
     # Learning parameters
-    episodes = 500
-    alpha = .3
-    gamma = .9
-    epsilon = .1
-
+    episodes = 500;alpha = .3;gamma = .9;epsilon = .1
     t = timer()
 
     # SARSA epsilon greedy
-    policy, rews, lengths = sarsa(env, episodes, alpha, gamma, epsilon_greedy, epsilon)
+    policy, rews, lengths = sarsa(env, episodes, alpha, gamma, softmax, epsilon)
     print("Execution time: {0}s\nPolicy:\n{1}\n".format(round(timer() - t, 4),
                                                         np.vectorize(env.actions.get)(policy.reshape(
                                                             env.shape))))
     _ = run_episode(env, policy, 20)
+"""
+if __name__=="__main__":
+    envname = "Cliff-v0"
+
+    print("\n----------------------------------------------------------------")
+    print("\tEnvironment: ", envname)
+    print("----------------------------------------------------------------\n")
+
+    env = gym.make(envname)
+    env.render()
+
+    # Learning parameters
+    episodes = 1000;ep_limit = 50;alpha = .3;gamma = .9;epsilon = .1;delta = 1e-3
+
+    rewser = [];lenser = []
+
+    window = 50  # Rolling window
+    mrew = np.zeros(episodes)
+    mlen = np.zeros(episodes)
+
+    t = timer()
+
+    # Q-Learning
+    _, rews, lengths = sarsa(env, episodes, alpha, gamma, softmax, epsilon)
+    rews = rolling(rews, window)
+    rewser.append({"x": np.arange(1, len(rews) + 1), "y": rews, "ls": "-", "label": "SARSA with softmax"})
+    lengths = rolling(lengths, window)
+    lenser.append({"x": np.arange(1, len(lengths) + 1), "y": lengths, "ls": "-", "label": "SARSA with softmax"})
+
+    # SARSA
+    _, rews, lengths = sarsa(env, episodes, alpha, gamma, epsilon_greedy, epsilon)
+    rews = rolling(rews, window)
+    rewser.append({"x": np.arange(1, len(rews) + 1), "y": rews, "label": "SARSA with e-greedy"})
+    lengths = rolling(lengths, window)
+    lenser.append({"x": np.arange(1, len(lengths) + 1), "y": lengths, "label": "SARSA with e-greedy"})
+
+    print("Execution time: {0}s".format(round(timer() - t, 4)))
+
+    plot(rewser, "Rewards", "Episodes", "Rewards")
+    plot(lenser, "Lengths", "Episodes", "Lengths")
+"""
