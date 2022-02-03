@@ -12,7 +12,6 @@ def present_with_higher_cost(queue, node):
         if(queue[node.state].value > node.value): return True
     return False
 
-
 def ucs(environment):
     queue = PriorityQueue()
     queue.add(Node(environment.startstate))
@@ -39,7 +38,6 @@ def ucs(environment):
                 queue.replace(child)
         space_cost = max(space_cost, len(queue) + len(explored))
 
-
 def greedy_tree_search(environment, timeout=10000):
     goalpos = environment.state_to_pos(environment.goalstate)
     queue = PriorityQueue()
@@ -61,7 +59,6 @@ def greedy_tree_search(environment, timeout=10000):
             queue.add(child)
             space_cost = max(space_cost,len(queue))
     return None, time_cost, space_cost
-
 
 def greedy_graph_search(environment):
     goalpos = environment.state_to_pos(environment.goalstate)

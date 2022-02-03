@@ -1,5 +1,4 @@
-import os
-import sys
+import os, sys
 
 import numpy as np
 
@@ -7,9 +6,10 @@ module_path = os.path.abspath(os.path.join('../tools'))
 if module_path not in sys.path:
     sys.path.append(module_path)
 
-import gym
+import gym, envs
 from utils.ai_lab_functions import *
 from timeit import default_timer as timer
+from tqdm import tqdm as tqdm
 
 def epsilon_greedy(q, state, epsilon):
     """
@@ -23,7 +23,7 @@ def epsilon_greedy(q, state, epsilon):
     """
     if np.random.random() < epsilon:
         return np.random.choice(q.shape[1])
-    return q[state].argmax()
+    return q[state].argmax() #q[state] = U R D L
 
 def softmax(q, state, temp):
     """
@@ -75,7 +75,7 @@ def q_learning(env, episodes, alpha, gamma, expl_func, expl_param):
     return policy, rews, lengths
 
 
-if __name__ == "__main__":
+if __name__=="__main__":
     envname = "Cliff-v0"
 
     print("\n----------------------------------------------------------------")
@@ -87,7 +87,11 @@ if __name__ == "__main__":
     print()
 
     # Learning parameters
-    episodes = 500;alpha = .3;gamma = .9;epsilon = .1
+    episodes = 500
+    alpha = .3
+    gamma = .9
+    epsilon = .1
+
     t = timer()
 
     # Q-Learning epsilon greedy

@@ -10,37 +10,8 @@ import gym, envs
 from utils.ai_lab_functions import *
 from timeit import default_timer as timer
 from tqdm import tqdm as tqdm
+from solution_1 import epsilon_greedy, softmax
 
-
-def epsilon_greedy(q, state, epsilon):
-    """
-    Epsilon-greedy action selection function
-
-    Args:
-        q: q table
-        state: agent's current state
-        epsilon: epsilon parameter
-
-    Returns:
-        action id
-    """
-    if np.random.random() < epsilon:
-        return np.random.choice(q.shape[1])
-    return q[state].argmax()
-
-def softmax(q, state, temp):
-    """
-    Softmax action selection function
-    Args:
-    q: q table
-    state: agent's current state
-    temp: temperature parameter
-
-    Returns:
-        action id
-    """
-    e = np.exp(q[state] / temp) #q[state] = U R D L
-    return np.random.choice(q.shape[1], p=e / e.sum())
 
 def sarsa(env, episodes, alpha, gamma, expl_func, expl_param):
     """
